@@ -1,8 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-import re, pickle
-
-model = pickle.load(open("heart_model.pkl","rb"))
+import re, pickle, os
 
 def extract_nlp():
     text = symptom.get().lower()
@@ -21,6 +19,9 @@ def extract_nlp():
     sugar.insert(0, 1 if "high sugar" in text else 0)
 
 def predict():
+    if model is None:
+        messagebox.showerror("No Model", "Prediction model not loaded. Place 'heart_model.pkl' in the project folder or train the model first.")
+        return
     data = [[
         int(age.get()), int(sex.get()), int(cp.get()),
         int(bp.get()), int(chol.get()), int(sugar.get()),
@@ -42,6 +43,19 @@ def predict():
 root = tk.Tk()
 root.title("Heart Disease Prediction System")
 root.geometry("900x520")
+
+# Try loading model after root exists so we can show messageboxes if load fails
+model = None
+model_path = "heart_model.pkl"
+try:
+    if os.path.exists(model_path):
+        with open(model_path, "rb") as f:
+            model = pickle.load(f)
+    else:
+        messagebox.showwarning("Model Missing",
+                               f"Model file '{model_path}' not found. Prediction disabled.\nPlease place the file in the project folder or train a model.")
+except Exception as e:
+    messagebox.showerror("Model Load Error", f"Failed to load model: {e}")
 
 tk.Label(root,text="Heart Disease Prediction System",
          bg="brown",fg="white",
